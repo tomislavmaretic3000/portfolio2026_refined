@@ -33,9 +33,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <SmoothScroll />
         <StickyNav />
-        <GlassEdges>
-          {children}
-        </GlassEdges>
+        <GlassEdges />
+        {children}
         {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
     </html>

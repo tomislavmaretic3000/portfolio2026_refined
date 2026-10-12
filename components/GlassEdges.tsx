@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-export default function GlassEdges({ children }: { children: React.ReactNode }) {
+export default function GlassEdges() {
   const rootRef = useRef<HTMLDivElement>(null);
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
@@ -43,39 +43,49 @@ export default function GlassEdges({ children }: { children: React.ReactNode }) 
   }, []);
 
   return (
-    <div ref={rootRef} style={{ position: "relative" }}>
-      {/* Page content — captured as the scene by liquidglass */}
-      <div data-dynamic style={{ position: "relative", zIndex: 0 }}>
-        {children}
-      </div>
-
-      {/* Left glass strip — 3vw, direct child of root */}
+    <div
+      ref={rootRef}
+      aria-hidden
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 40,
+        pointerEvents: "none",
+        overflow: "hidden",
+      }}
+    >
+      {/* Background capture layer — liquidglass needs a sibling with the bg */}
       <div
-        ref={leftRef}
         style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          width: "3vw",
-          height: "100vh",
-          borderRadius: 0,
-          zIndex: 40,
-          pointerEvents: "none",
+          position: "absolute",
+          inset: 0,
+          backdropFilter: "none",
         }}
       />
 
-      {/* Right glass strip — 3vw, direct child of root */}
+      {/* Left edge — 3vw */}
+      <div
+        ref={leftRef}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "3vw",
+          height: "100%",
+          borderRadius: 0,
+        }}
+      />
+
+      {/* Right edge — 3vw */}
       <div
         ref={rightRef}
         style={{
-          position: "fixed",
+          position: "absolute",
           top: 0,
           right: 0,
           width: "3vw",
-          height: "100vh",
+          height: "100%",
           borderRadius: 0,
-          zIndex: 40,
-          pointerEvents: "none",
         }}
       />
     </div>
