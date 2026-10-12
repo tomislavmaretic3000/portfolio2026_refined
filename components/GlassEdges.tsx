@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 
-export default function GlassEdges() {
+export default function GlassEdges({ children }: { children: React.ReactNode }) {
   const rootRef = useRef<HTMLDivElement>(null);
   const leftRef = useRef<HTMLDivElement>(null);
   const rightRef = useRef<HTMLDivElement>(null);
@@ -43,49 +43,39 @@ export default function GlassEdges() {
   }, []);
 
   return (
-    <div
-      ref={rootRef}
-      aria-hidden
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 40,
-        pointerEvents: "none",
-        overflow: "hidden",
-      }}
-    >
-      {/* Background capture layer — liquidglass needs a sibling with the bg */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backdropFilter: "none",
-        }}
-      />
+    <div ref={rootRef} style={{ position: "relative" }}>
+      {/* Page content — captured as the scene by liquidglass */}
+      <div data-dynamic style={{ position: "relative", zIndex: 0 }}>
+        {children}
+      </div>
 
-      {/* Left edge — 3vw */}
+      {/* Left glass strip — 3vw, direct child of root */}
       <div
         ref={leftRef}
         style={{
-          position: "absolute",
+          position: "fixed",
           top: 0,
           left: 0,
           width: "3vw",
-          height: "100%",
+          height: "100vh",
           borderRadius: 0,
+          zIndex: 40,
+          pointerEvents: "none",
         }}
       />
 
-      {/* Right edge — 3vw */}
+      {/* Right glass strip — 3vw, direct child of root */}
       <div
         ref={rightRef}
         style={{
-          position: "absolute",
+          position: "fixed",
           top: 0,
           right: 0,
           width: "3vw",
-          height: "100%",
+          height: "100vh",
           borderRadius: 0,
+          zIndex: 40,
+          pointerEvents: "none",
         }}
       />
     </div>
