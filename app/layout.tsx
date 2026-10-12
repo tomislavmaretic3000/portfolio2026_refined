@@ -3,6 +3,7 @@ import { Archivo, Fragment_Mono } from "next/font/google";
 import { Agentation } from "agentation";
 import SmoothScroll from "@/components/SmoothScroll";
 import StickyNav from "@/components/StickyNav";
+import GlassEdges from "@/components/GlassEdges";
 import "./globals.css";
 
 const archivo = Archivo({
@@ -32,6 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body>
         <SmoothScroll />
         <StickyNav />
+        <GlassEdges />
         {children}
         {process.env.NODE_ENV === "development" && <Agentation />}
       </body>
