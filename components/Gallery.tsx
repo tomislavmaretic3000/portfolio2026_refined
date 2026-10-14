@@ -9,8 +9,31 @@ type GalleryImage = {
   naturalHeight: number;
 };
 
-const SCROLL_SPEED_MOBILE = 1.95; // 1.5 * 1.3
-const SCROLL_SPEED_DESKTOP = 1.5;
+const MOVE_DURATION_MS = 450;
+const STEP_PAUSE_MS = 500;
+
+const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+
+// The scrollLeft that puts the child at `index` flush against the track's own left padding,
+// so every stopped image's left edge lines up with the logo/text container's left edge.
+const getChildOffset = (el: HTMLDivElement, index: number) => {
+  const child = el.children[index] as HTMLElement | undefined;
+  if (!child) return 0;
+  const paddingLeft = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+  return child.offsetLeft - paddingLeft;
+};
+
+// After a manual drag, finds the next image to step toward from the current scroll position.
+const findNextIndex = (el: HTMLDivElement, imagesLength: number) => {
+  const paddingLeft = parseFloat(getComputedStyle(el).paddingLeft) || 0;
+  for (let i = 1; i <= imagesLength; i++) {
+    const child = el.children[i] as HTMLElement | undefined;
+    if (child && child.offsetLeft - paddingLeft > el.scrollLeft + 1) {
+      return i;
+    }
+  }
+  return 1;
+};
 
 export default function Gallery({ images }: { images: GalleryImage[] }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -20,19 +43,45 @@ export default function Gallery({ images }: { images: GalleryImage[] }) {
   const startScrollLeft = useRef(0);
   const animRef = useRef<number>(undefined);
 
-  // Autoplay: scroll right continuously, loop seamlessly
+  // Step-and-pause autoplay: ease toward one image over MOVE_DURATION_MS, then hold for STEP_PAUSE_MS.
+  const phaseRef = useRef<"moving" | "paused">("paused");
+  const targetIndexRef = useRef(1);
+  const moveStartScrollRef = useRef(0);
+  const moveTargetRef = useRef(0);
+  const moveStartTimeRef = useRef(0);
+  const pauseUntilRef = useRef(0);
+
   const tick = useCallback(() => {
     const el = scrollRef.current;
     if (el && !isPaused.current) {
-      const speed = window.innerWidth < 768 ? SCROLL_SPEED_MOBILE : SCROLL_SPEED_DESKTOP;
-      el.scrollLeft += speed;
-      // Reset to start of first copy once we've scrolled through half
-      if (el.scrollLeft >= el.scrollWidth / 2) {
-        el.scrollLeft = 0;
+      const now = performance.now();
+      if (phaseRef.current === "paused") {
+        if (now >= pauseUntilRef.current) {
+          moveStartScrollRef.current = el.scrollLeft;
+          moveTargetRef.current = getChildOffset(el, targetIndexRef.current);
+          moveStartTimeRef.current = now;
+          phaseRef.current = "moving";
+        }
+      } else {
+        const t = Math.min((now - moveStartTimeRef.current) / MOVE_DURATION_MS, 1);
+        const eased = easeOutCubic(t);
+        el.scrollLeft =
+          moveStartScrollRef.current + (moveTargetRef.current - moveStartScrollRef.current) * eased;
+        if (t >= 1) {
+          el.scrollLeft = moveTargetRef.current;
+          let nextIndex = targetIndexRef.current + 1;
+          if (nextIndex > images.length) {
+            el.scrollLeft = 0;
+            nextIndex = 1;
+          }
+          targetIndexRef.current = nextIndex;
+          phaseRef.current = "paused";
+          pauseUntilRef.current = now + STEP_PAUSE_MS;
+        }
       }
     }
     animRef.current = requestAnimationFrame(tick);
-  }, []);
+  }, [images.length]);
 
   useEffect(() => {
     animRef.current = requestAnimationFrame(tick);
@@ -61,6 +110,12 @@ export default function Gallery({ images }: { images: GalleryImage[] }) {
   const onPointerUp = () => {
     isDragging.current = false;
     isPaused.current = false;
+    const el = scrollRef.current;
+    if (el) {
+      targetIndexRef.current = findNextIndex(el, images.length);
+      phaseRef.current = "paused";
+      pauseUntilRef.current = performance.now() + STEP_PAUSE_MS;
+    }
   };
 
   // Duplicate images for seamless loop
