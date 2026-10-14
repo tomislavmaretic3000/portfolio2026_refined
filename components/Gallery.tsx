@@ -12,7 +12,7 @@ type GalleryImage = {
 const MOVE_DURATION_MS = 450;
 const STEP_PAUSE_MS = 500;
 
-const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+const easeOutQuart = (t: number) => 1 - Math.pow(1 - t, 4);
 
 // The scrollLeft that puts the child at `index` flush against the track's own left padding,
 // so every stopped image's left edge lines up with the logo/text container's left edge.
@@ -64,7 +64,7 @@ export default function Gallery({ images }: { images: GalleryImage[] }) {
         }
       } else {
         const t = Math.min((now - moveStartTimeRef.current) / MOVE_DURATION_MS, 1);
-        const eased = easeOutCubic(t);
+        const eased = easeOutQuart(t);
         el.scrollLeft =
           moveStartScrollRef.current + (moveTargetRef.current - moveStartScrollRef.current) * eased;
         if (t >= 1) {
